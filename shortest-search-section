@@ -1,0 +1,83 @@
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
+public class Main {
+
+    public static void main(String[] args) {
+
+        Map<String, List<Integer>> pageIndexes = new HashMap<String, List<Integer>>() {{
+            put("jio", Arrays.asList(15, 26, 52));
+            put("phone", Arrays.asList(8, 22, 32, 64));
+            put("announcement", Arrays.asList(14, 18, 25, 36));
+            put("something", Arrays.asList(1, 3, 45));
+            put("call", Arrays.asList(11, 13, 23));
+        }};
+
+        List<String> searchTerms = Arrays.asList("jio", "phone", "announcement");
+
+        System.out.println(getTheShortestSection(pageIndexes, searchTerms));
+    }
+
+    private static List<Integer> getTheShortestSection( final Map<String, List<Integer>> pageIndexes, final List<String> searchTerms ) {
+
+        // Get the search term related indexes alone
+        List<List<Integer>> searchTermIndexes = getSearchTermIndexes(pageIndexes, searchTerms);
+
+        int[] searchTermPointers = new int[searchTerms.size()];
+
+        // point all the pointer to the start of the index
+        for ( int i =0; i<searchTermPointers.length; ++i ) { searchTermPointers[i] = 0; }
+
+        int shortLength = 0, finalMinIndex = 0, finalMaxIndex = 0;
+        List<Integer> shortestSearchResult = new ArrayList<>();
+        boolean searchComplete = false;
+
+        while ( !searchComplete ) {
+
+            int minIndex = 0, maxIndex = 0, minIndexWordIndex = 0;
+            for ( int i =0; i < searchTermIndexes.size(); ++i) {
+
+                List<Integer> indexList = searchTermIndexes.get(i);
+                int currentIndex = indexList.get(searchTermPointers[i]);
+                if ( i == 0 || currentIndex < minIndex) {
+                    minIndex = currentIndex;
+                    minIndexWordIndex = i;
+                }
+                maxIndex = currentIndex > maxIndex ? currentIndex : maxIndex;
+
+                //System.out.println("Each iteration:" + "small:" + minIndex + " maxIndex: " + maxIndex  );
+            }
+
+            searchTermPointers[minIndexWordIndex]++;
+            int currentLength = maxIndex - minIndex;
+            if ( shortLength == 0 || currentLength < shortLength ) {
+                shortLength = currentLength;
+                finalMinIndex = minIndex;
+                finalMaxIndex = maxIndex;
+
+            }
+
+            if (searchTermPointers[minIndexWordIndex] >= (searchTermIndexes.get(minIndexWordIndex).size())) {
+                searchComplete = true;
+            }
+            System.out.println("small:" + minIndex + " maxIndex: " + maxIndex );
+        }
+        return Arrays.asList(finalMinIndex, finalMaxIndex);
+
+    }
+
+    // returns the search term index alone
+    private static List<List<Integer>> getSearchTermIndexes( final Map<String, List<Integer>> pageIndexes, final List<String> searchTerms ) {
+        return pageIndexes.entrySet()
+            .stream()
+            .filter(pageIndex -> searchTerms.contains(pageIndex.getKey()))
+            .map(Entry::getValue)
+            .collect(Collectors.toList());
+
+    }
+}
